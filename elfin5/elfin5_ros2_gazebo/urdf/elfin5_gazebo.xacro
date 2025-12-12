@@ -3,15 +3,15 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="elfin5_gazebo" 
-    params="use_fake_hardware:=false 
-    use_real_hardware:=true">
+    params="use_fake_hardware:=true 
+    use_real_hardware:=false">
 
-    <gazebo>
-      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-        <robot_sim_type>gazebo_ros2_control/GazeboSystem</robot_sim_type>
-        <parameters>$(find elfin5_ros2_gazebo)/config/elfin_arm_controller.yaml</parameters>
-      </plugin>
-    </gazebo>
+    <!-- <gazebo> -->
+    <!--   <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control"> -->
+    <!--     <robot_sim_type>gazebo_ros2_control/GazeboSystem</robot_sim_type> -->
+    <!--     <parameters>$(find elfin5_ros2_gazebo)/config/elfin_arm_controller.yaml</parameters> -->
+    <!--   </plugin> -->
+    <!-- </gazebo> -->
     
     <ros2_control name="GazeboSystem" type="system">
 
@@ -24,7 +24,7 @@
 
         <xacro:unless value="${use_real_hardware}">
           <xacro:if value="${use_fake_hardware}">
-              <plugin>fake_components/GenericSystem</plugin>
+              <plugin>mock_components/GenericSystem</plugin>
               <param name="state_following_offset">0.0</param>
           </xacro:if>
 
