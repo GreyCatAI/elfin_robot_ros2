@@ -4,7 +4,7 @@
 # Launch file for the elfin5 Robot MoveIt!2 SIMULATION in ROS2 Humble:
 
 # Import libraries:
-from moveit_project.launch_config.xarm.inner import XarmMoveItConfigBuilder
+from moveit_project.launch_config.xarm import XarmMoveItConfigBuilder
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -37,7 +37,6 @@ def load_file(package_name, file_path):
         with open(absolute_file_path, "r") as file:
             return file.read()
     except EnvironmentError:
-
         return None
 
 
