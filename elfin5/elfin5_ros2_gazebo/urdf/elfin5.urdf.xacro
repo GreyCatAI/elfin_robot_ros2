@@ -16,8 +16,8 @@
       <xacro:elfin5_transmission />
       <!-- GAZEBO - ROS2_CONTROL: -->
       <xacro:elfin5_gazebo  
-      use_real_hardware="$(use_real_hardware)" 
-      use_fake_hardware="$(use_fake_hardware)"/>
+      use_real_hardware="${use_real_hardware}" 
+      use_fake_hardware="${use_fake_hardware}"/>
       
     <link name="world"/>
     
