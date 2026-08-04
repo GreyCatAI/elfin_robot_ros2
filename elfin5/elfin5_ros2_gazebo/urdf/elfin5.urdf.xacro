@@ -2,8 +2,7 @@
 
 <robot name="elfin5" xmlns:xacro="http://wiki.ros.org/xacro">
 
-  <xacro:arg name="use_real_hardware" default="true" />
-  <xacro:arg name="use_fake_hardware" default="false" />
+  <xacro:macro name="elfin5_ros2_gazebo_urdf" params="use_real_hardware use_fake_hardware">
 
   <!-- Load TRANSMISSION file: -->
   <xacro:include filename="$(find elfin5_ros2_gazebo)/urdf/elfin5_transmission.xacro" />
@@ -18,8 +17,8 @@
     <xacro:elfin5_transmission />
     <!-- GAZEBO - ROS2_CONTROL: -->
     <xacro:elfin5_gazebo  
-    use_real_hardware="$(arg use_real_hardware)" 
-    use_fake_hardware="$(arg use_fake_hardware)"/>
+    use_real_hardware="${use_real_hardware}" 
+    use_fake_hardware="${use_fake_hardware}"/>
     
   <link name="world"/>
   
@@ -461,4 +460,5 @@
       link="elfin_dummy_gripper" />
   </joint>
   
+  </xacro:macro>
 </robot>
