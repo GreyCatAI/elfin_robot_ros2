@@ -48,7 +48,7 @@ find_package(rosidl_default_generators REQUIRED)
 # NOTE: for merge install
 include_directories(
   include
-  ../../../install/include
+  ${CMAKE_INSTALL_PREFIX}/include
 )
 
 set(DEPENDENCIES
@@ -69,7 +69,7 @@ set(DEPENDENCIES
   "rosidl_default_generators"
 )
 
-LINK_DIRECTORIES(../../../build/elfin_ethercat_driver/)
+LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/../elfin_ethercat_driver/)
 
 add_library(elfin_hardware_interface
         SHARED
