@@ -30,6 +30,7 @@
 #ifndef ELFIN_ETHERCAT_MANAGER_H
 #define ELFIN_ETHERCAT_MANAGER_H
 
+#include <atomic>
 #include <stdexcept>
 #include <string>
 
@@ -138,6 +139,9 @@ public:
    */
   int getNumClinets() const;
 
+  /** Return false after sustained process-data loss. */
+  bool isCommunicationHealthy() const;
+
 private:
   bool initSoem(const std::string& ifname);
 
@@ -147,9 +151,10 @@ private:
   boost::thread cycle_thread_;
   mutable boost::mutex iomap_mutex_;
   bool stop_flag_;
+  std::atomic<bool> communication_healthy_;
+  std::atomic<unsigned> failed_cycles_;
 };
 
 }
 
 #endif
-

@@ -4,6 +4,7 @@
 #include <pluginlib/class_list_macros.hpp>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <exception>
 #include <hardware_interface/handle.hpp>
 
@@ -277,6 +278,14 @@ namespace elfin_hardware_interface{
 
   return_type ElfinHWInterface::read(const rclcpp::Time &time, const rclcpp::Duration &period)
   {
+    if (!em->isCommunicationHealthy())
+    {
+      RCLCPP_ERROR(
+        n_->get_logger(),
+        "EtherCAT communication lost; exiting controller manager for launch restart");
+      rclcpp::shutdown();
+      std::exit(EXIT_FAILURE);
+    }
     rclcpp::spin_some(n_);
     for(size_t i=0;i<module_infos_.size();i++)
     {

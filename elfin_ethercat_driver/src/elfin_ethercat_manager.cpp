@@ -53,6 +53,7 @@ namespace
 {
 static const unsigned THREAD_SLEEP_TIME = 1000; // 1 ms
 static const unsigned EC_TIMEOUTMON = 500;
+static const unsigned MAX_FAILED_CYCLES = 100;
 static const int NSEC_PER_SECOND = 1e+9;
 void timespecInc(struct timespec &tick, int nsec)
 {
@@ -131,7 +132,11 @@ void handleErrors()
 }
 
 
-void cycleWorker(boost::mutex& mutex, bool& stop_flag)
+void cycleWorker(
+  boost::mutex& mutex,
+  bool& stop_flag,
+  std::atomic<bool>& communication_healthy,
+  std::atomic<unsigned>& failed_cycles)
 {
   // 1ms in nanoseconds
   double period = THREAD_SLEEP_TIME * 1000;
@@ -154,7 +159,15 @@ void cycleWorker(boost::mutex& mutex, bool& stop_flag)
 
     if (wkc < expected_wkc)
     {
+      if (failed_cycles.fetch_add(1) + 1 >= MAX_FAILED_CYCLES)
+      {
+        communication_healthy.store(false);
+      }
       handleErrors();
+    }
+    else
+    {
+      failed_cycles.store(0);
     }
 
     // check overrun
@@ -178,7 +191,9 @@ namespace elfin_ethercat_driver {
 EtherCatManager::EtherCatManager(const std::string& ifname)
   : ifname_(ifname), 
     num_clients_(0),
-    stop_flag_(false)
+    stop_flag_(false),
+    communication_healthy_(true),
+    failed_cycles_(0)
 {
   // initialize iomap
   for(int i=0; i<4096; i++)
@@ -190,7 +205,9 @@ EtherCatManager::EtherCatManager(const std::string& ifname)
   {
     cycle_thread_ = boost::thread(cycleWorker, 
                                   boost::ref(iomap_mutex_),
-                                  boost::ref(stop_flag_));
+                                  boost::ref(stop_flag_),
+                                  boost::ref(communication_healthy_),
+                                  boost::ref(failed_cycles_));
   } 
   else 
   {
@@ -301,6 +318,11 @@ int EtherCatManager::getNumClinets() const
   return num_clients_;
 }
 
+bool EtherCatManager::isCommunicationHealthy() const
+{
+  return communication_healthy_.load();
+}
+
 void EtherCatManager::write(int slave_no, uint8_t channel, uint8_t value)
 {
   boost::mutex::scoped_lock lock(iomap_mutex_);
@@ -384,4 +406,3 @@ template unsigned short EtherCatManager::readSDO<unsigned short> (int slave_no, 
 template unsigned long EtherCatManager::readSDO<unsigned long> (int slave_no, uint16_t index, uint8_t subidx) const;
 
 }
-
