@@ -30,6 +30,7 @@
 
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
+#include <robot_connection_recovery/connection_state_publisher.hpp>
 
 // using namespace ELFIN;
 using hardware_interface::CallbackReturn;
@@ -112,6 +113,8 @@ private:
 
   rclcpp::Node::SharedPtr n_;
   rclcpp::Node::SharedPtr m_;
+  std::unique_ptr<robot_connection_recovery::ConnectionStatePublisher>
+    connection_state_publisher_;
 
   std::vector<bool> pre_switch_flags_;
   std::vector<boost::shared_ptr<boost::mutex> > pre_switch_mutex_ptrs_;
@@ -125,6 +128,7 @@ private:
   bool pos_interface_running = false;
   bool first_pass_ = true;
   bool initialized_ = false;
+  bool connection_ready_ = false;
 
 };
 } 

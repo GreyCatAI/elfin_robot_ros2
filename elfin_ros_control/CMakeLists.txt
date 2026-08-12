@@ -44,6 +44,7 @@ find_package(elfin_ethercat_driver REQUIRED)
 find_package(pluginlib REQUIRED REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(robot_connection_recovery REQUIRED)
 
 # NOTE: for merge install
 include_directories(
@@ -67,6 +68,7 @@ set(DEPENDENCIES
   "elfin_ethercat_driver"
   "pluginlib"
   "rosidl_default_generators"
+  "robot_connection_recovery"
 )
 
 LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/../elfin_ethercat_driver/)

@@ -54,6 +54,7 @@ namespace
 static const unsigned THREAD_SLEEP_TIME = 1000; // 1 ms
 static const unsigned EC_TIMEOUTMON = 500;
 static const unsigned MAX_FAILED_CYCLES = 100;
+static const unsigned RECOVERY_GOOD_CYCLES = 10;
 static const int NSEC_PER_SECOND = 1e+9;
 void timespecInc(struct timespec &tick, int nsec)
 {
@@ -138,6 +139,7 @@ void cycleWorker(
   std::atomic<bool>& communication_healthy,
   std::atomic<unsigned>& failed_cycles)
 {
+  unsigned good_cycles = 0;
   // 1ms in nanoseconds
   double period = THREAD_SLEEP_TIME * 1000;
   // get current time
@@ -159,6 +161,7 @@ void cycleWorker(
 
     if (wkc < expected_wkc)
     {
+      good_cycles = 0;
       if (failed_cycles.fetch_add(1) + 1 >= MAX_FAILED_CYCLES)
       {
         communication_healthy.store(false);
@@ -168,6 +171,16 @@ void cycleWorker(
     else
     {
       failed_cycles.store(0);
+      bool required_slaves_operational = true;
+      for (int slave = 1; slave <= ec_slavecount && slave <= 3; ++slave)
+      {
+        required_slaves_operational =
+          required_slaves_operational && ec_slave[slave].state == EC_STATE_OPERATIONAL;
+      }
+      if (required_slaves_operational && ++good_cycles >= RECOVERY_GOOD_CYCLES)
+      {
+        communication_healthy.store(true);
+      }
     }
 
     // check overrun
@@ -192,7 +205,7 @@ EtherCatManager::EtherCatManager(const std::string& ifname)
   : ifname_(ifname), 
     num_clients_(0),
     stop_flag_(false),
-    communication_healthy_(true),
+    communication_healthy_(false),
     failed_cycles_(0)
 {
   // initialize iomap

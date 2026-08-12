@@ -82,6 +82,9 @@ namespace elfin_hardware_interface{
       return hardware_interface::CallbackReturn::ERROR;
     }
     n_ = rclcpp::Node::make_shared("elfin_hw");
+    connection_state_publisher_ =
+      std::make_unique<robot_connection_recovery::ConnectionStatePublisher>(*n_);
+    connection_state_publisher_->publish(false);
     std::vector<std::string> elfin_driver_names_default;
     std::string ethercat_name_default = "eth0";
     elfin_driver_names_default.resize(1);
@@ -280,11 +283,14 @@ namespace elfin_hardware_interface{
   {
     if (!em->isCommunicationHealthy())
     {
-      RCLCPP_ERROR(
-        n_->get_logger(),
-        "EtherCAT communication lost; exiting controller manager for launch restart");
-      rclcpp::shutdown();
-      std::exit(EXIT_FAILURE);
+      if (connection_ready_)
+      {
+        connection_ready_ = false;
+        initialized_ = false;
+        connection_state_publisher_->publish(false);
+        RCLCPP_ERROR(n_->get_logger(), "EtherCAT communication lost; waiting for recovery");
+      }
+      return return_type::OK;
     }
     rclcpp::spin_some(n_);
     for(size_t i=0;i<module_infos_.size();i++)
@@ -310,7 +316,7 @@ namespace elfin_hardware_interface{
       module_infos_[i].axis2.effort = -1*trq_count2/module_infos_[i].axis2.count_Nm_factor;
     }
     
-    if (first_pass_ && !initialized_) {
+    if (!initialized_) {
       // initialize commands
       for(size_t i=0;i<module_infos_.size();i++)
       {
@@ -322,12 +328,22 @@ namespace elfin_hardware_interface{
       }
       initialized_ = true;
     }
+    if (!connection_ready_)
+    {
+      connection_ready_ = true;
+      connection_state_publisher_->publish(true);
+      RCLCPP_INFO(n_->get_logger(), "EtherCAT process data recovered");
+    }
     // RCLCPP_INFO(n_->get_logger(),"Read Current Data...");
     return return_type::OK;
   }
 
   return_type ElfinHWInterface::write(const rclcpp::Time &time, const rclcpp::Duration &period)
   {
+    if (!connection_ready_)
+    {
+      return return_type::OK;
+    }
     // rclcpp::spin_some(n_);
     bool all_salve_enable = true;
     for(unsigned int i=0;i<ethercat_drivers_.size();i++)
